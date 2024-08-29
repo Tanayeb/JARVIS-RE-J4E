@@ -31,3 +31,4 @@ if ClientAPIKey() not in Keys():
     TTS('Your AI Assistant is not activated, Kindly send us your activated key.')
     sleep(1000)
     exit()
+

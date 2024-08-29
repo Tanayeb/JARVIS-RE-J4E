@@ -1,7 +1,7 @@
-# Decompiled with PyLingual (https://pylingual.io)
 # Internal filename: main.py
 # Bytecode version: 3.10.0rc2 (3439)
 # Source timestamp: 1970-01-01 00:00:00 UTC (0)
+import sys
 import os
 import json
 import threading
@@ -14,18 +14,20 @@ import mtranslate as mt
 import eel
 from dotenv import load_dotenv, set_key
 from threading import Lock
-
-# Import backend modules (assuming they are implemented correctly)
+from playsound import playsound
 from Backend.Extra import AnswerModifier, QueryModifier, LoadMessages, GuiMessagesConverter
 from Backend.Automation import Automation, professional_responses
-from Backend.RSE import RealTimeChatBotAI
+from Backend.RSE_R import RealTimeChatBotAI
 from Backend.Chatbot import ChatBotAI
 from Backend.AutoModel import Model
-from Backend.ChatGpt import ChatBotAI as ChatGptAI
-from Backend.TTS import TTS
+from Backend.ChatGpt import ChatGptAI as ChatGptAI
+from Backend.TTS2 import TTS
+from Backend.RSE import Alert
+
+Alert("JARVIS IS ONLINE NOW")
 
 #Lock set by kaushik
-import Backend.Security
+# import Backend.Security
 #remove this to unlock
 
 # Load environment variables
@@ -61,7 +63,7 @@ def MainExecution(Query: str):
             if WEBCAM:
                 python_call_to_capture()
                 sleep(0.5)
-                Answer = ChatGptAI(Query)
+                Answer = AnswerModifier(ChatGptAI(Query))
             else:
                 Answer = AnswerModifier(ChatBotAI(Query))
             state = 'Answering...'
@@ -69,15 +71,20 @@ def MainExecution(Query: str):
         else:
             state = 'Searching...'
             Answer = AnswerModifier(RealTimeChatBotAI(Query))
+            response = Answer
             state = 'Answering...'
-            TTS(Answer)
+            TTS(response)
     elif 'open webcam' in Decision:
+        # playsound(r'Start.mp3')
         python_call_to_start_video()
+        playsound(r'Start.mp3')
         print('Video Started')
         WEBCAM = True
     elif 'close webcam' in Decision:
+        # playsound(r'Stop.mp3')
         print('Video Stopped')
         python_call_to_stop_video()
+        playsound(r'Stop.mp3')
         WEBCAM = False
     else:
         state = 'Automation...'
@@ -186,5 +193,7 @@ def js_capture(image_data):
         f.write(image_bytes)
 
 # Initialize Eel and start the application
+
+
 eel.init('web')
 eel.start('spider.html', port=44444)

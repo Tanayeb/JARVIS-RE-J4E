@@ -31,10 +31,10 @@ def QueryModifier(Query):
     return new_query.capitalize()
 
 def LoadMessages():
-    with open('ChatLog.json', 'r') as f:
+    with open(r'ChatLog.json', 'r') as f:
         messages = json.load(f)
         return messages
-        return messages
+        # return messages
 
 def GuiMessagesConverter(messages: list[dict[str, str]]):
     temp = []

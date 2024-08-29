@@ -21,6 +21,10 @@ from dotenv import load_dotenv
 import os
 import subprocess
 import keyboard
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from comtypes import CLSCTX_ALL
+from ctypes import cast, POINTER
+
 load_dotenv()
 system_platform = platform.system()
 classes = ['zCubwf', 'hgKElc', 'LTKOO sY7ric', 'Z0LcW', 'gsrt vk_bk FzvWSb YwPhnf', 'pclqee', 'tw-Data-text tw-text-small tw-ta', 'IZ6rdc', 'O5uR6d LTKOO', 'vlzY6d', 'webanswers-webanswers_table__webanswers-table', 'dDoNo ikb4Bb gsrt', 'sXLaOe', 'LWkfKe', 'VQF4g', 'qv3Wpe', 'kno-rdesc', 'SPZz6b']
@@ -66,6 +70,9 @@ def YouTubeSearch(Topic):
     Url4Search = f'https://www.youtube.com/results?search_query={Topic}'
     webbrowser.open(Url4Search)
     return random.choice(professional_responses)
+
+# os.makedirs('Assets', exist_ok=True)
+
 API_URL = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1'
 headers = {'Authorization': f"Bearer {os.environ['HuggingFaceAPI']}"}
 
@@ -75,38 +82,40 @@ async def query(payload):
 
 async def generate_images(prompt: str):
     tasks = []
-    for _ in range(4):
-        payload = {'inputs': f'{prompt}, quality=4K, sharpness=maximum, Ultra High details, high resolution, seed = {randint(0, 1000000)}'}
+    for i in range(4):
+        payload = {
+            'inputs': f'{prompt}, quality=4K, sharpness=maximum, Ultra High details, high resolution, seed={randint(0, 1000000)}'
+        }
         task = asyncio.create_task(query(payload))
         tasks.append(task)
     image_bytes_list = await asyncio.gather(*tasks)
+    image_paths = []
     for i, image_bytes in enumerate(image_bytes_list):
-        with open(f'Images//image{i + 1}.jpg', 'wb') as f:
+        image_path = f'image{i + 1}.jpg'
+        with open(image_path, 'wb') as f:
             f.write(image_bytes)
+        image_paths.append(image_path)
+    return image_paths
 
-class Show_Image:
+class ShowImage:
+    def __init__(self, image_paths: list) -> None:
+        self.image_paths = image_paths
 
-    def __init__(self, li: list) -> None:
-        self.listd = li
-
-    def open(self, no):
-        try:
-            img = Image.open(f'Images//{self.listd[no]}')
-            img.show()
-        except:
-            print(f'Images//{self.listd[no]}')
-            self.open(no + 1)
-
-    def close(self, no):
-        return
+    def open(self, no: int):
+        if 0 <= no < len(self.image_paths):
+            try:
+                img = Image.open(self.image_paths[no])
+                img.show()
+            except Exception as e:
+                print(f"Error opening {self.image_paths[no]}: {e}")
+        else:
+            print(f"Image number {no} is out of range")
 
 def GenerateImages(prompt: str):
-    asyncio.run(generate_images(prompt))
-    x = Show_Image(listdir('Images')[-4:])
-    x.open(0)
-    x.open(1)
-    x.open(2)
-    x.open(3)
+    image_paths = asyncio.run(generate_images(prompt))
+    viewer = ShowImage(image_paths)
+    for i in range(len(image_paths)):
+        viewer.open(i)
     return True
 
 def PlayYoutube(query):
@@ -167,21 +176,47 @@ def System(command):
         elif platform.system() == 'Linux':
             os.system('amixer -D pulse sset Master unmute')
 
+    # def volume_up():
+    #     if platform.system() == 'Windows':
+    #         keyboard.press_and_release('volume up')
+    #     elif platform.system() == 'Darwin':
+    #         os.system("osascript -e 'set volume output volume ((output volume of (get volume settings)) + 10)'")
+    #     elif platform.system() == 'Linux':
+    #         os.system('amixer -D pulse sset Master 5%+')
+
     def volume_up():
-        if platform.system() == 'Windows':
-            keyboard.press_and_release('volume up')
-        elif platform.system() == 'Darwin':
-            os.system("osascript -e 'set volume output volume ((output volume of (get volume settings)) + 10)'")
-        elif platform.system() == 'Linux':
-            os.system('amixer -D pulse sset Master 5%+')
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+
+        # Get the current volume level (range is 0.0 to 1.0)
+        current_volume = volume.GetMasterVolumeLevelScalar()
+
+        # Increase volume by 5% (0.05)
+        new_volume = current_volume + 0.05
+
+        # Ensure the volume does not exceed 100% (1.0)
+        new_volume = min(1.0, new_volume)
+
+        # Set the new volume level
+        volume.SetMasterVolumeLevelScalar(new_volume, None)
+
+    # def volume_down():
+    #     if platform.system() == 'Windows':
+    #         keyboard.press_and_release('volume down')
+    #     elif platform.system() == 'Darwin':
+    #         os.system("osascript -e 'set volume output volume ((output volume of (get volume settings)) - 10)'")
+    #     elif platform.system() == 'Linux':
+    #         os.system('amixer -D pulse sset Master 5%-')
 
     def volume_down():
-        if platform.system() == 'Windows':
-            keyboard.press_and_release('volume down')
-        elif platform.system() == 'Darwin':
-            os.system("osascript -e 'set volume output volume ((output volume of (get volume settings)) - 10)'")
-        elif platform.system() == 'Linux':
-            os.system('amixer -D pulse sset Master 5%-')
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+
+        current_volume = volume.GetMasterVolumeLevelScalar()
+        new_volume = max(0.0, current_volume - 0.10)
+        volume.SetMasterVolumeLevelScalar(new_volume, None)  
 
     def minimize_all_windows():
         if platform.system() == 'Windows':
@@ -197,7 +232,7 @@ def System(command):
         if platform.system() == 'Darwin':
             return
         if platform.system() == 'Linux':
-            break
+            False
 
     def shutdown():
         if platform.system() == 'Windows':
@@ -206,6 +241,14 @@ def System(command):
             os.system('osascript -e \'tell application "System Events" to shut down\'')
         elif platform.system() == 'Linux':
             os.system('poweroff')
+
+    def sleep():
+        if platform.system() == 'Windows':
+            os.system('rundll32.exe powrprof.dll,SetSuspendState 0,1,0')
+        elif platform.system() == 'Darwin':  # macOS
+            os.system('pmset sleepnow')
+        elif platform.system() == 'Linux':
+            os.system('systemctl suspend')        
 
     def restart():
         if platform.system() == 'Windows':
@@ -235,6 +278,10 @@ def System(command):
     if command == 'shutdown':
         shutdown()
         return True
+    if command == 'sleep':
+        sleep()
+        return True
+    
     if command == 'restart':
         restart()
     return True
@@ -282,3 +329,5 @@ async def TranslateAndExecute(commands: list[str]):
 async def Automation(commands: list[str], func=print):
     async for result in TranslateAndExecute(commands):
         func(result)
+
+# generate_images("iron man")        
