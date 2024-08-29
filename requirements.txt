@@ -4,7 +4,7 @@ comtypes
 python-dotenv
 eel
 google-generativeai
-google-generativeai-language
+# google-generativeai-language
 groq
 keyboard
 mtranslate
@@ -15,3 +15,4 @@ pycaw
 pywhatkit
 requests
 rich
+google
