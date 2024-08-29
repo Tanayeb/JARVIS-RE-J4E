@@ -9,7 +9,7 @@ groq
 keyboard
 mtranslate
 Pillow
-playsound
+playsound==1.2.2
 pyautogui
 pycaw
 pywhatkit
