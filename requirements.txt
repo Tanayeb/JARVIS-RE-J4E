@@ -1,5 +1,3 @@
-asyncio
-base64
 beautifulsoup4
 cohere
 comtypes
@@ -17,5 +15,3 @@ pycaw
 pywhatkit
 requests
 rich
-threading
-webbrowser
