@@ -195,5 +195,5 @@ def js_capture(image_data):
 # Initialize Eel and start the application
 
 
-eel.init(r'JARVIS-RE-J4E\web')
+eel.init(r'web')
 eel.start('spider.html', port=44444)

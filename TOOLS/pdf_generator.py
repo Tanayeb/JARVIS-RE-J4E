@@ -1,7 +1,7 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
-from Brain import Brain
+from Backend.Brain import Brain
 
 class PDFGenerator:
     def __init__(self, output_path):

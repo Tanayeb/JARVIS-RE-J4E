@@ -1,2 +1,22 @@
-[{"role": "user", "content": "Hello JARVIS, How are you?"},
- {"role": "assistant", "content": "Welcome Back TANAYEB, I am doing well. How may i assist you?"}]
+[
+    {
+        "role": "user",
+        "content": "Hello JARVIS, How are you?"
+    },
+    {
+        "role": "assistant",
+        "content": "Welcome Back TANAYEB, I am doing well. How may i assist you?"
+    },
+    {
+        "role": "user",
+        "content": "Hello how are you?"
+    },
+    {
+        "role": "user",
+        "content": "Hello how are you?"
+    },
+    {
+        "role": "assistant",
+        "content": "Welcome Back TANAYEB, I am functioning as intended. How can I help you"
+    }
+]
