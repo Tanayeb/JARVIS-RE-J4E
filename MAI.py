@@ -1,6 +1,3 @@
-# Internal filename: main.py
-# Bytecode version: 3.10.0rc2 (3439)
-# Source timestamp: 1970-01-01 00:00:00 UTC (0)
 import sys
 import os
 import json
@@ -9,9 +6,9 @@ import asyncio
 import base64
 from time import sleep
 from random import choice
+from flask import Flask, request, jsonify, send_file
 import pyautogui
 import mtranslate as mt
-import eel
 from dotenv import load_dotenv, set_key
 from threading import Lock
 from playsound import playsound
@@ -26,10 +23,6 @@ from Backend.RSE import Alert
 
 Alert("JARVIS IS ONLINE NOW")
 
-#Lock set by kaushik
-# import Backend.Security
-#remove this to unlock
-
 # Load environment variables
 load_dotenv()
 state = 'Available...'
@@ -41,6 +34,8 @@ InputLanguage = os.environ['InputLanguage']
 Assistantname = os.environ['AssistantName']
 Username = os.environ['NickName']
 lock = Lock()
+
+app = Flask(__name__)
 
 def UniversalTranslator(Text: str) -> str:
     """Translates text to English."""
@@ -61,7 +56,8 @@ def MainExecution(Query: str):
     if 'general' in Decision or 'realtime' in Decision:
         if Decision[0] == 'general':
             if WEBCAM:
-                python_call_to_capture()
+                # Placeholder for video capture function
+                capture_image()
                 sleep(0.5)
                 Answer = AnswerModifier(ChatGptAI(Query))
             else:
@@ -75,15 +71,14 @@ def MainExecution(Query: str):
             state = 'Answering...'
             TTS(response)
     elif 'open webcam' in Decision:
-        # playsound(r'Start.mp3')
-        python_call_to_start_video()
+        # Placeholder for starting video function
+        start_video()
         playsound(r'Start.mp3')
         print('Video Started')
         WEBCAM = True
     elif 'close webcam' in Decision:
-        # playsound(r'Stop.mp3')
-        print('Video Stopped')
-        python_call_to_stop_video()
+        # Placeholder for stopping video function
+        stop_video()
         playsound(r'Stop.mp3')
         WEBCAM = False
     else:
@@ -96,8 +91,8 @@ def MainExecution(Query: str):
         TTS(response)
     state = 'Listening...'
 
-@eel.expose
-def js_messages():
+@app.route('/messages', methods=['GET'])
+def get_messages():
     """Fetches new messages to update the GUI."""
     global messages, js_messageslist
     with lock:
@@ -105,20 +100,21 @@ def js_messages():
     if js_messageslist != messages:
         new_messages = GuiMessagesConverter(messages[len(js_messageslist):])
         js_messageslist = messages
-        return new_messages
-    return []
+        return jsonify(new_messages)
+    return jsonify([])
 
-@eel.expose
-def js_state(stat=None):
+@app.route('/state', methods=['GET', 'POST'])
+def update_state():
     """Updates or retrieves the current state."""
     global state
-    if stat:
-        state = stat
-    return state
+    if request.method == 'POST':
+        state = request.json.get('state')
+    return jsonify({'state': state})
 
-@eel.expose
-def js_mic(transcription):
+@app.route('/mic', methods=['POST'])
+def handle_mic():
     """Handles microphone input."""
+    transcription = request.json.get('transcription')
     print(transcription)
     if not working:
         work = threading.Thread(target=MainExecution, args=(transcription,), daemon=True)
@@ -126,38 +122,56 @@ def js_mic(transcription):
         working.append(work)
     else:
         if working[0].is_alive():
-            return
+            return jsonify({'status': 'working'})
         working.pop()
         work = threading.Thread(target=MainExecution, args=(transcription,), daemon=True)
         work.start()
         working.append(work)
+    return jsonify({'status': 'started'})
 
-@eel.expose
-def python_call_to_start_video():
+@app.route('/start_video', methods=['POST'])
+def start_video():
     """Starts the video capture."""
-    eel.startVideo()
+    # Replace this with actual video start logic
+    # Example: start video capture using an external service or library
+    print('Starting video capture...')
+    return jsonify({'status': 'Video Started'})
 
-@eel.expose
-def python_call_to_stop_video():
+@app.route('/stop_video', methods=['POST'])
+def stop_video():
     """Stops the video capture."""
-    eel.stopVideo()
+    # Replace this with actual video stop logic
+    # Example: stop video capture using an external service or library
+    print('Stopping video capture...')
+    return jsonify({'status': 'Video Stopped'})
 
-@eel.expose
-def python_call_to_capture():
+@app.route('/capture', methods=['POST'])
+def capture_image():
     """Captures an image from the video."""
-    eel.capture()
+    # Replace this with actual image capture logic
+    # Example: capture image from the video stream and save it
+    print('Capturing image...')
+    return jsonify({'status': 'Image Captured'})
 
-@eel.expose
-def js_page(cpage=None):
+@app.route('/page/<cpage>', methods=['GET'])
+def navigate_page(cpage):
     """Navigates to the specified page."""
     if cpage == 'home':
-        eel.openHome()
+        # Replace with actual home page logic
+        print('Navigating to home page...')
     elif cpage == 'settings':
-        eel.openSettings()
+        # Replace with actual settings page logic
+        print('Navigating to settings page...')
+    return jsonify({'status': f'Navigated to {cpage}'})
 
-@eel.expose
-def js_setvalues(GeminiApi, HuggingFaceApi, GroqApi, AssistantName, Username):
+@app.route('/setvalues', methods=['POST'])
+def set_values():
     """Sets API keys and user preferences."""
+    GeminiApi = request.json.get('GeminiApi')
+    HuggingFaceApi = request.json.get('HuggingFaceApi')
+    GroqApi = request.json.get('GroqApi')
+    AssistantName = request.json.get('AssistantName')
+    Username = request.json.get('Username')
     print(f'GeminiApi = {GeminiApi!r} HuggingFaceApi = {HuggingFaceApi!r} GroqApi = {GroqApi!r} AssistantName = {AssistantName!r} Username = {Username!r}')
     if GeminiApi:
         set_key('.env', 'CohereAPI', GeminiApi)
@@ -169,31 +183,32 @@ def js_setvalues(GeminiApi, HuggingFaceApi, GroqApi, AssistantName, Username):
         set_key('.env', 'AssistantName', AssistantName)
     if Username:
         set_key('.env', 'NickName', Username)
+    return jsonify({'status': 'Values Set'})
 
-@eel.expose
+@app.route('/setup', methods=['POST'])
 def setup():
     """Sets up the GUI window."""
     pyautogui.hotkey('win', 'up')
+    return jsonify({'status': 'Setup Complete'})
 
-@eel.expose
-def js_language():
+@app.route('/language', methods=['GET'])
+def get_language():
     """Returns the input language."""
-    return str(InputLanguage)
+    return jsonify({'language': InputLanguage})
 
-@eel.expose
-def js_assistantname():
+@app.route('/assistantname', methods=['GET'])
+def get_assistant_name():
     """Returns the assistant's name."""
-    return Assistantname
+    return jsonify({'assistant_name': Assistantname})
 
-@eel.expose
-def js_capture(image_data):
+@app.route('/capture_image', methods=['POST'])
+def capture_image_route():
     """Saves the captured image."""
+    image_data = request.json.get('image_data')
     image_bytes = base64.b64decode(image_data.split(',')[1])
     with open('capture.png', 'wb') as f:
         f.write(image_bytes)
+    return jsonify({'status': 'Image Saved'})
 
-# Initialize Eel and start the application
-
-
-eel.init(r'JARVIS-RE-J4E\web')
-eel.start('spider.html', port=44444)
+if __name__ == '__main__':
+    app.run(port=44444)
