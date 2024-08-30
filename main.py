@@ -170,10 +170,7 @@ def js_setvalues(GeminiApi, HuggingFaceApi, GroqApi, AssistantName, Username):
     if Username:
         set_key('.env', 'NickName', Username)
 
-@eel.expose
-def setup():
-    """Sets up the GUI window."""
-    pyautogui.hotkey('win', 'up')
+
 
 @eel.expose
 def js_language():

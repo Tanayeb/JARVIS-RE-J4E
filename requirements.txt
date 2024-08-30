@@ -10,7 +10,7 @@ keyboard
 mtranslate
 Pillow
 playsound==1.2.2
-pyautogui
+# pyautogui
 pycaw
 pywhatkit
 requests
