@@ -16,3 +16,4 @@ pywhatkit
 requests
 rich
 google
+gunicorn
